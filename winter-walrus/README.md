@@ -27,7 +27,7 @@ Winter Walrus solves this issue by keeping custody of the **StakedWal** on a Sha
 
 Winter Walrus operates on a delegated proof-of-stake system structured into epochs, each lasting two weeks. The timing of staking within an epoch determines the rewards and type of asset received:
 
--   **Staking before 50% of epoch progress:** Users mint an LST and is eligible for the next epoch rewards.
+-   **Staking before 50% of epoch progress:** Users mint an LST and are eligible for the next epoch rewards.
 -   **Staking after 50% of epoch progress:** Users receive a burnable NFT, which can be converted into the respective LST one epoch later.
 
 ## Admin Rights
@@ -101,6 +101,7 @@ public fun sync_node_exchange_rate<T>(
 ```
 
 **mint:** Mints LST tokens by staking WAL tokens to a specific node.
+
 **Errors**
 -   You are not allowed to deposit less than 1 WAL + fees.
 -   Must mint **before** the epoch mid point.
@@ -117,6 +118,7 @@ public fun mint<T>(
 ```
 
 **mint_after_votes_finished:** Mints a burnable NFT when staking after votes are finished in the epoch.
+
 **Errors**
 -   You are not allowed to deposit less than 1 WAL + fees.
 -   Must mint **after** the epoch mid point.
@@ -133,8 +135,9 @@ public fun mint_after_votes_finished<T>(
 ```
 
 **burn_stake_nft:** Burns a stake NFT to convert it into LST tokens.
+
 **Errors**
--   Must burn on the next epoch or later.
+-   Must burn on the epoch after minting or later.
 
 ```move
 public fun burn_stake_nft<T>(
@@ -147,6 +150,7 @@ public fun burn_stake_nft<T>(
 ```
 
 **burn_lst:** Burns LST tokens to withdraw WAL tokens and StakedWal NFTs.
+
 **Errors**
 -   Burn more than 1 LST
 
@@ -162,6 +166,7 @@ public fun burn_lst<T>(
 ```
 
 **transmute:** Converts one LST type to another LST type (e.g., from any LST to WWAL).
+
 **Errors**
 -   Transmute more than 1 LST + fees.
 

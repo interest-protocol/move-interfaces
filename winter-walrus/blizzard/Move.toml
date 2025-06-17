@@ -1,0 +1,17 @@
+[package]
+name = "Blizzard"
+edition = "2024.beta" 
+license = "MIT"           
+authors = ["Jose Cerqueira (jose@interestprotocol.com)"]  
+
+[dependencies]
+InterestBPS = { git = "https://github.com/interest-protocol/bps.git", rev = "main" }
+InterestMath = { git = "https://github.com/interest-protocol/interest-math.git", rev = "main" }
+
+WinterWalrus = { local = "../wwal" } 
+Walrus = { local = "../dependencies/walrus" }
+WAL = { local = "../dependencies/wal" }
+
+[addresses]
+blizzard = "0x0"
+

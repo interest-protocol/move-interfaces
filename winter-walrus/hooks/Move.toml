@@ -1,0 +1,15 @@
+[package]
+name = "BlizzardHooks"
+edition = "2024.beta" 
+license = "MIT"           
+authors = ["Jose Cerqueira (jose@interestprotocol.com)"]  
+
+[dependencies]
+InterestMath = { git = "https://github.com/interest-protocol/interest-math.git", rev = "main" }
+
+WinterWalrus = { local = "../wwal" } 
+Blizzard = { local = "../blizzard" }
+Walrus = { local = "../dependencies/walrus" }
+
+[addresses]
+blizzard_hooks = "0x0"

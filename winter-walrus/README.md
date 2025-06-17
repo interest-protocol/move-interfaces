@@ -103,7 +103,7 @@ public fun sync_node_exchange_rate<T>(
 **mint:** Mints LST tokens by staking WAL tokens to a specific node.
 
 **Errors**
--   You are not allowed to deposit less than 1 WAL + fees.
+-   Must deposit at least 1 WAL + fees.
 -   Must mint **before** the epoch mid point.
 
 ```move
@@ -120,7 +120,7 @@ public fun mint<T>(
 **mint_after_votes_finished:** Mints a burnable NFT when staking after votes are finished in the epoch.
 
 **Errors**
--   You are not allowed to deposit less than 1 WAL + fees.
+-   Must deposit at least 1 WAL + fees.
 -   Must mint **after** the epoch mid point.
 
 ```move
@@ -152,7 +152,7 @@ public fun burn_stake_nft<T>(
 **burn_lst:** Burns LST tokens to withdraw WAL tokens and StakedWal NFTs.
 
 **Errors**
--   Burn more than 1 LST
+-   Must burn at least 1 LST.
 
 ```move
 public fun burn_lst<T>(
@@ -168,7 +168,7 @@ public fun burn_lst<T>(
 **transmute:** Converts one LST type to another LST type (e.g., from any LST to WWAL).
 
 **Errors**
--   Transmute more than 1 LST + fees.
+-   Must transmute at least 1 LST + fees.
 
 ```move
 public fun transmute<T>(

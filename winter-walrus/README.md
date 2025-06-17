@@ -1,12 +1,12 @@
 # Winter Walrus ❄️
 
-Winter Walrus is a liquid staking protocol built on top of Walrus Protocol Native Staking.
+Winter Walrus is a liquid staking protocol built on top of Walrus Native Staking.
 
 ## Overview
 
-Winter Walrus is a liquid staking standard built on the Walrus Protocol, enabling users to stake $WAL, and mint a variety of LSTs: 
+Winter Walrus is a framework to mint $WAL LSTs. Currently we support the LSTs below:
 
--   wWal: native Winter Walrus LST.
+-   wWal: [native Winter Walrus LST](https://x.com/walrusLST).
 -   upWal: by [Double Up](https://www.doubleup.fun/).
 -   mWal: by [Studio Mirai](https://sm.xyz/)
 -   pWal: by [Patara](https://patara.app/)
@@ -15,32 +15,34 @@ Winter Walrus is a liquid staking standard built on the Walrus Protocol, enablin
 
 Each LST issuer has full admin rights over it. They decide which validators to allocate to and the fees.
 
-Winter Walrus frontend is available at [www.winterwalrus.com](https://www.winterwalrus.com/) and [open sourced on Github](https://github.com/interest-protocol/winterwalrus.com). Users experience near-instant Web2 UX with 0ms latency. The platform introduces liquid staking tokens to the Walrus ecosystem and a unique staking mechanism governed by epochs.
+Winter Walrus frontend is available at [www.winterwalrus.com](https://www.winterwalrus.com/) and [open sourced on Github](https://github.com/interest-protocol/winterwalrus.com). Users experience near-instant Web2 UX with 0ms latency.
 
 ## Why?
 
-Walrus uses a *delegated proof of Stake* for consensus. Users can natively stake WAL and receive a NFT named *StakedWal* that represents their position. The issue is that StakedWal is not fungible, you cannot use it to swap, lend or leverage.
+Walrus uses a **delegated proof of Stake** for consensus. Users can natively stake WAL and receive a NFT named **StakedWal** that represents their position. The issue is that StakedWal is not fungible, you cannot use it to swap, lend or leverage.
 
-Winter Walrus solves this issue by keeping custody of the *StakedWal* on a Shared Object to mint Liquid Staking Coins. Now users are able to interact with DeFi while earning passive staking income.
+Winter Walrus solves this issue by keeping custody of the **StakedWal** on a Shared Object to mint Liquid Staking Coins. Now users are able to interact with DeFi while earning passive staking income.
 
 ## Epoch Mechanics
 
 Winter Walrus operates on a delegated proof-of-stake system structured into epochs, each lasting two weeks. The timing of staking within an epoch determines the rewards and type of asset received:
 
--   *Staking before 50% of epoch progress:* Users mint an LST.
--   *Staking after 50% of epoch progress:* Users receive a burnable NFT, which can be converted into the respective LST one epoch later.
+-   **Staking before 50% of epoch progress:** Users mint an LST and is eligible for the next epoch rewards.
+-   **Staking after 50% of epoch progress:** Users receive a burnable NFT, which can be converted into the respective LST one epoch later.
 
 ## Admin Rights
 
 Winter Walrus employs a SuperAdmin Key system:
 
--   *SuperAdmin Key:* Can create and remove admins.
--   *Admin (Key + Store):* Manages stake, unstake, and transmute fees.
--   *SuperAdmin Transfers:* Require a two-epoch function execution for security purposes.
+-   **SuperAdmin Key:** Can create and remove admins.
+-   **Admin (Key + Store):** Manages stake, unstake, and transmute fees.
+-   **SuperAdmin Transfers:** Require a two-epoch function execution for security purposes.
 
 ## Security
 
 Winter Walrus was audited by [MoveBit](https://www.movebit.xyz/). You can find the audit report [here](https://1728454349-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FRWtS0P2EGEpzNUGZyx31%2Fuploads%2Fvi7dgNYPSMEBYyQglM9l%2FBlizzard%20Audit%20Repor.pdf?alt=media&token=bfbab48f-19a9-4b56-94b5-44b2d6abda18).
+
+The current Admin capabilities are held in a hardware wallet. We plan to move to a multi-signature wallet in the future.
 
 ## 👨‍💻 Developers  
 
@@ -78,9 +80,145 @@ interest_access_control = { r.mvr = "@interest/winter-walrus" }
 network = "mainnet"
 ```
 
-ACL objects require a `One Time Witness` for security reasons. You can read more about OTWs [here](https://move-book.com/programmability/witness-pattern.html?highlight=one%20time#one-time-witness).
-
 ## API Reference
+
+**sync_exchange_rate:** Synchronizes the exchange rate for the entire staking system.
+**Errors**
+-   If you hit the maximum dynamic reads. Please use **sync_node_exchange_rate:**
+
+```move
+public fun sync_exchange_rate<T>(self: &mut BlizzardStaking<T>, walrus_staking: &Staking)
+```
+
+**sync_node_exchange_rate:** Synchronizes the exchange rate for a specific node.
+
+```move
+public fun sync_node_exchange_rate<T>(
+    self: &mut BlizzardStaking<T>,
+    walrus_staking: &Staking,
+    node_id: ID,
+)
+```
+
+**mint:** Mints LST tokens by staking WAL tokens to a specific node.
+**Errors**
+-   You are not allowed to deposit less than 1 WAL + fees.
+-   Must mint **before** the epoch mid point.
+
+```move
+public fun mint<T>(
+    self: &mut BlizzardStaking<T>,
+    walrus_staking: &mut Staking,
+    wal_coin: Coin<WAL>,
+    node_id: ID,
+    av: &AllowedVersions,
+    ctx: &mut TxContext,
+): Coin<T>
+```
+
+**mint_after_votes_finished:** Mints a burnable NFT when staking after votes are finished in the epoch.
+**Errors**
+-   You are not allowed to deposit less than 1 WAL + fees.
+-   Must mint **after** the epoch mid point.
+
+```move
+public fun mint_after_votes_finished<T>(
+    self: &mut BlizzardStaking<T>,
+    walrus_staking: &mut Staking,
+    wal_coin: Coin<WAL>,
+    node_id: ID,
+    av: &AllowedVersions,
+    ctx: &mut TxContext,
+): BlizzardStakeNFT
+```
+
+**burn_stake_nft:** Burns a stake NFT to convert it into LST tokens.
+**Errors**
+-   Must burn on the next epoch or later.
+
+```move
+public fun burn_stake_nft<T>(
+    self: &mut BlizzardStaking<T>,
+    walrus_staking: &Staking,
+    nft: BlizzardStakeNFT,
+    av: &AllowedVersions,
+    ctx: &mut TxContext,
+): Coin<T>
+```
+
+**burn_lst:** Burns LST tokens to withdraw WAL tokens and StakedWal NFTs.
+**Errors**
+-   Burn more than 1 LST
+
+```move
+public fun burn_lst<T>(
+    self: &mut BlizzardStaking<T>,
+    walrus_staking: &mut Staking,
+    lst_coin: Coin<T>,
+    withdraw_ixs: vector<IX>,
+    av: &AllowedVersions,
+    ctx: &mut TxContext,
+): (Coin<T>, vector<StakedWal>)
+```
+
+**transmute:** Converts one LST type to another LST type (e.g., from any LST to WWAL).
+**Errors**
+-   Transmute more than 1 LST + fees.
+
+```move
+public fun transmute<T>(
+    self: &mut BlizzardStaking<T>,
+    wwal_staking: &mut BlizzardStaking<WWAL>,
+    walrus_staking: &mut Staking,
+    from_coin: Coin<T>,
+    withdraw_ixs: vector<IX>,
+    av: &AllowedVersions,
+    ctx: &mut TxContext,
+): (Coin<T>, Coin<WWAL>)
+```
+
+**to_lst_at_epoch:** Converts WAL value to LST value at a specific epoch.
+
+```move
+public fun to_lst_at_epoch<T>(
+    self: &mut BlizzardStaking<T>,
+    epoch: u32,
+    value: u64,
+    round_up: bool,
+): Option<u64>
+```
+
+**to_wal_at_epoch:** Converts LST value to WAL value at a specific epoch.
+
+```move
+public fun to_wal_at_epoch<T>(
+    self: &mut BlizzardStaking<T>,
+    epoch: u32,
+    value: u64,
+    round_up: bool,
+): Option<u64>
+```
+
+**allowed_nodes:** Returns the list of allowed node IDs for this LST.
+
+```move
+public fun allowed_nodes<T>(self: &mut BlizzardStaking<T>): vector<ID>
+```
+
+**staked_wal_vector_at_node:** Returns the BigVector of StakedWal NFTs at a specific node.
+
+```move
+public fun staked_wal_vector_at_node<T>(
+    self: &mut BlizzardStaking<T>,
+    node_id: &ID,
+): &BigVector<StakedWal>
+```
+
+**fee_config:** Returns the fee configuration for this LST.
+
+```move
+public fun fee_config<T>(self: &mut BlizzardStaking<T>): &BlizzardFee
+```
 
 **new:** It creates a `ACL`and `SuperAdmin`. The SuperAdmin is sent to the `super_admin_recipient`. The `delay` is the number of epochs that must pass before the SuperAdmin can be `transferred`.
 
@@ -91,100 +229,6 @@ public fun new<T: drop>(
     super_admin_recipient: address,
     ctx: &mut TxContext,
 ): ACL<T>
-```
-
-**default:** It calls `new` with default arguments. The delay is set to 3 epochs and the `SuperAdmin` is sent to the `ctx.sender`.
-
-```move
-public  fun  default<T: drop>(otw: &T, ctx: &mut TxContext): ACL<T>
-```
-
-**new_admin:** It allows the `SuperAdmin` to create an `Admin`.
-
-```move
-public  fun  new_admin<T: drop>(acl: &mut ACL<T>, _: &SuperAdmin<T>, ctx: &mut TxContext): Admin<T>
-```
-
-**add_role:** It allows the `SuperAdmin` to create a role for an `Admin` using its address.
-
-```move
-public  fun  add_role<T: drop>(acl: &mut ACL<T>, _: &SuperAdmin<T>, admin: address, role: u8)
-```
-
-**remove_role:** It allows the `SuperAdmin` to remove a role from an `Admin` using its address.
-
-```move
-public  fun  remove_role<T: drop>(acl: &mut ACL<T>, _: &SuperAdmin<T>, admin: address, role: u8)
-```
-
-**revoke:** It allows the `SuperAdmin` to remove a an `Admin`. This operation removes an `Admin` from the `ACL` shared object. It will prevent the removed `Admin` from issuing an `AdminWitness`.
-
-```move
-public  fun  revoke<T: drop>(acl: &mut ACL<T>, _: &SuperAdmin<T>, to_revoke: address)
-```
-
-**sign_in:** It allows an `Admin` to prove its access rights by issuing an `AdminWitness` with its roles.
-
-```move
-public  fun  sign_in<T: drop>(acl: &ACL<T>, admin: &Admin<T>): AdminWitness<T>
-```
-
-**destroy_admin:** It allows an `Admin` to revoke its rights and delete the object for a Sui rebate.
-
-```move
-public  fun  destroy_admin<T: drop>(acl: &mut ACL<T>, admin: Admin<T>)
-```
-
-**destroy_super_admin:** It allows a `SuperAdmin` to revoke its rights and delete the object for a Sui rebate. **Please note, this is irreversible.**
-
-```move
-public  fun  destroy_super_admin<T: drop>(super_admin: SuperAdmin<T>)
-```
-
-**start_transfer:** It initiates the SuperAdmin transfer process.
-
-```move
-public fun start_transfer<T: drop>(
-    super_admin: &mut SuperAdmin<T>,
-    new_super_admin: address,
-    ctx: &mut TxContext,
-)
-```
-
-**finish_transfer:** It transfers the `SuperAdmin` to the recipient set at `start_transfer`. It can only be called after the `delay` period.
-
-```move
-public  fun  finish_transfer<T: drop>(mut super_admin: SuperAdmin<T>, ctx: &mut TxContext)
-```
-
-**assert_has_role:** It asserts that an `AdminWitness` has a `role`.
-
-```move
-public  fun  assert_has_role<T: drop>(witness: &AdminWitness<T>, role: u8)
-```
-
-**admin_address:** Returns the address of the `Admin`.
-
-```move
-public  fun  admin_address<T: drop>(admin: &Admin<T>): address
-```
-
-**is_admin:** Checks if the address is an `Admin`.
-
-```move
-public  fun  is_admin<T: drop>(acl: &ACL<T>, admin: address): bool
-```
-
-**has_role:** Checks if the address is an `Admin` has the `role`.
-
-```move
-public  fun  has_role<T: drop>(acl: &ACL<T>, admin: address, role: u8): bool
-```
-
-**permissions:** Returns all the roles of an `Admin`. It is tracked via bit map.
-
-```move
-public  fun  permissions<T: drop>(acl: &ACL<T>, admin: address): Option<u128>
 ```
 
 ## Errors

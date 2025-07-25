@@ -2,8 +2,6 @@
 
 Please add the code below to your Move.toml
 
-tide-amm = { git = "https://github.com/interest-protocol/move-interfaces.git", subdir = "tide-amm", rev = "main" }
-
 ```bash
 
 [dependencies]
